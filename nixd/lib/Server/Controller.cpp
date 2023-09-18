@@ -206,7 +206,7 @@ void Controller::fetchConfig() {
                 lspserver::ConfigurationItem{.section = "nixd"}}},
         [this](llvm::Expected<configuration::TopLevel> Response) {
           if (Response) {
-            lspserver::log("jjw-log: fetchConfig {0}", Response);
+            lspserver::log("jjw-log: fetchConfig {0}", Response.get());
             updateConfig(std::move(Response.get()));
           }
         });

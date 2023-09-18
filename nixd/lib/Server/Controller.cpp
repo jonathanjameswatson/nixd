@@ -233,9 +233,9 @@ void Controller::readJSONConfig(lspserver::PathRef File) noexcept {
     std::ifstream In(File.str(), std::ios::in);
     SS << In.rdbuf();
 
-    if (auto NewConfig = parseConfig(SS.str()))
-      updateConfig(std::move(NewConfig.get()));
-    else {
+    if (auto NewConfig = parseConfig(SS.str())) {
+      JSONConfig = std::move(NewConfig.get());
+    } else {
       throw nix::Error("configuration cannot be parsed");
     }
   } catch (std::exception &E) {
@@ -290,20 +290,20 @@ Controller::Controller(std::unique_ptr<lspserver::InboundPort> In,
   PublishDiagnostic = mkOutNotifiction<lspserver::PublishDiagnosticsParams>(
       "textDocument/publishDiagnostics");
 
+  readJSONConfig();
+
   // Workspace
   Registry.addNotification("workspace/didChangeConfiguration", this,
                            &Controller::onWorkspaceDidChangeConfiguration);
   WorkspaceConfiguration =
       mkOutMethod<lspserver::ConfigurationParams, configuration::TopLevel>(
-          "workspace/configuration");
+          "workspace/configuration", nullptr, [=, this]() { return JSONConfig; });
 
   /// IPC
   Registry.addNotification("nixd/ipc/diagnostic", this,
                            &Controller::onEvalDiagnostic);
 
   Registry.addNotification("nixd/ipc/finished", this, &Controller::onFinished);
-
-  readJSONConfig();
 }
 
 //-----------------------------------------------------------------------------/

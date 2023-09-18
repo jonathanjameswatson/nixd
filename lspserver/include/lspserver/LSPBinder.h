@@ -12,7 +12,8 @@ namespace lspserver {
 template <typename T>
 llvm::Expected<T> parseParam(const llvm::json::Value &Raw,
                              llvm::StringRef PayloadName,
-                             llvm::StringRef PayloadKind) {
+                             llvm::StringRef PayloadKind,
+                             T Base = T()) {
   T Result;
   llvm::json::Path::Root Root;
   if (!fromJSON(Raw, Result, Root)) {

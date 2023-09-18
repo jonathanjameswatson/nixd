@@ -66,7 +66,9 @@ protected:
 
   template <class ParamTy, class ResponseTy>
   llvm::unique_function<void(const ParamTy &, Callback<ResponseTy>)>
-  mkOutMethod(llvm::StringRef Method, OutboundPort *O = nullptr) {
+  mkOutMethod(llvm::StringRef Method, OutboundPort *O = nullptr,
+              llvm::unique_function<ResponseTy()> BaseConstructor =
+              []() { return ResponseTy(); }) {
     if (!O)
       O = Out.get();
     return [=, this](const ParamTy &Params, Callback<ResponseTy> Reply) {

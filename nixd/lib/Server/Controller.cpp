@@ -198,44 +198,44 @@ void Controller::updateConfig(configuration::TopLevel &&NewConfig) {
   createEnqueueOptionWorker();
 }
 
-  void Controller::fetchConfig() {
-    if (ClientCaps.WorkspaceConfiguration) {
-      WorkspaceConfiguration(
-                             lspserver::ConfigurationParams{
-                               std::vector<lspserver::ConfigurationItem>{
-                                 lspserver::ConfigurationItem{.section = "nixd"}}},
-                             [this](llvm::Expected<configuration::TopLevel> Response) {
-                               if (Response) {
-    lspserver::log("jjw-log: fetchConfig {0}", Response);
+void Controller::fetchConfig() {
+  if (ClientCaps.WorkspaceConfiguration) {
+    WorkspaceConfiguration(
+        lspserver::ConfigurationParams{
+            std::vector<lspserver::ConfigurationItem>{
+                lspserver::ConfigurationItem{.section = "nixd"}}},
+        [this](llvm::Expected<configuration::TopLevel> Response) {
+          if (Response) {
+            lspserver::log("jjw-log: fetchConfig {0}", Response);
             updateConfig(std::move(Response.get()));
           }
         });
   }
 }
 
-  llvm::Expected<configuration::TopLevel>
-  Controller::parseConfig(llvm::StringRef JSON) {
-    using namespace configuration;
+llvm::Expected<configuration::TopLevel>
+Controller::parseConfig(llvm::StringRef JSON) {
+  using namespace configuration;
 
-    auto ExpectedValue = llvm::json::parse(JSON);
-    if (!ExpectedValue)
-      return ExpectedValue.takeError();
-    TopLevel NewConfig;
-    llvm::json::Path::Root P;
-    if (fromJSON(ExpectedValue.get(), NewConfig, P))
-      return NewConfig;
-    return lspserver::error("value cannot be converted to internal config type");
-  }
+  auto ExpectedValue = llvm::json::parse(JSON);
+  if (!ExpectedValue)
+    return ExpectedValue.takeError();
+  TopLevel NewConfig;
+  llvm::json::Path::Root P;
+  if (fromJSON(ExpectedValue.get(), NewConfig, P))
+    return NewConfig;
+  return lspserver::error("value cannot be converted to internal config type");
+}
 
-  void Controller::readJSONConfig(lspserver::PathRef File) noexcept {
-    lspserver::log("jjw-log: readJSONConfig {0}", File);
-    try {
-      std::string ConfigStr;
-      std::ostringstream SS;
-      std::ifstream In(File.str(), std::ios::in);
-      SS << In.rdbuf();
+void Controller::readJSONConfig(lspserver::PathRef File) noexcept {
+  lspserver::log("jjw-log: readJSONConfig {0}", File);
+  try {
+    std::string ConfigStr;
+    std::ostringstream SS;
+    std::ifstream In(File.str(), std::ios::in);
+    SS << In.rdbuf();
 
-      if (auto NewConfig = parseConfig(SS.str()))
+    if (auto NewConfig = parseConfig(SS.str()))
       updateConfig(std::move(NewConfig.get()));
     else {
       throw nix::Error("configuration cannot be parsed");

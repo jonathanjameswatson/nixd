@@ -205,6 +205,7 @@ void Controller::fetchConfig() {
                 lspserver::ConfigurationItem{.section = "nixd"}}},
         [this](llvm::Expected<configuration::TopLevel> Response) {
           if (Response) {
+            lspserver::log("jjw-log: fetchConfig {0}", Response.get());
             updateConfig(std::move(Response.get()));
           }
         });
@@ -226,6 +227,7 @@ Controller::parseConfig(llvm::StringRef JSON) {
 }
 
 void Controller::readJSONConfig(lspserver::PathRef File) noexcept {
+  lspserver::log("jjw-log: readJSONConfig {0}", File);
   try {
     std::string ConfigStr;
     std::ostringstream SS;

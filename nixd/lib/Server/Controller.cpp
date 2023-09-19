@@ -199,8 +199,6 @@ void Controller::updateConfig(configuration::TopLevel &&NewConfig) {
 }
 
 void Controller::fetchConfig() {
-  lspserver::log("jjw-log: JSON Config is currently: {0}",
-                 JSONConfig.options.enable);
   if (ClientCaps.WorkspaceConfiguration) {
     WorkspaceConfiguration(
         lspserver::ConfigurationParams{
@@ -299,9 +297,6 @@ Controller::Controller(std::unique_ptr<lspserver::InboundPort> In,
 
   PublishDiagnostic = mkOutNotifiction<lspserver::PublishDiagnosticsParams>(
       "textDocument/publishDiagnostics");
-
-  lspserver::log("jjw-log: JSON Config read: {0}",
-                 JSONConfig.options.enable);
 
   // Workspace
   Registry.addNotification("workspace/didChangeConfiguration", this,

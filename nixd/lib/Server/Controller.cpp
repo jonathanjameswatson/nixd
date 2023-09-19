@@ -259,6 +259,14 @@ Controller::Controller(std::unique_ptr<lspserver::InboundPort> In,
     : LSPServer(std::move(In), std::move(Out)), WaitWorker(WaitWorker),
       ASTMgr(Pool) {
 
+  // JSON Config, run before initialize
+  readJSONConfig();
+  configuration::TopLevel JSONConfigCopy = JSONConfig;
+  updateConfig(std::move(JSONConfigCopy));
+  WorkspaceConfiguration =
+      mkOutMethod<lspserver::ConfigurationParams, configuration::TopLevel>(
+          "workspace/configuration", nullptr, JSONConfig);
+
   // Life Cycle
   Registry.addMethod("initialize", this, &Controller::onInitialize);
   Registry.addNotification("initialized", this, &Controller::onInitialized);
@@ -292,18 +300,12 @@ Controller::Controller(std::unique_ptr<lspserver::InboundPort> In,
   PublishDiagnostic = mkOutNotifiction<lspserver::PublishDiagnosticsParams>(
       "textDocument/publishDiagnostics");
 
-  readJSONConfig();
-  updateConfig(std::forward<configuration::TopLevel>(JSONConfig));
-
   lspserver::log("jjw-log: JSON Config read: {0}",
                  JSONConfig.options.enable);
 
   // Workspace
   Registry.addNotification("workspace/didChangeConfiguration", this,
                            &Controller::onWorkspaceDidChangeConfiguration);
-  WorkspaceConfiguration =
-      mkOutMethod<lspserver::ConfigurationParams, configuration::TopLevel>(
-          "workspace/configuration", nullptr, JSONConfig);
 
   /// IPC
   Registry.addNotification("nixd/ipc/diagnostic", this,

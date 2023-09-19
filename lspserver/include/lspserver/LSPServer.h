@@ -67,19 +67,18 @@ protected:
   template <class ParamTy, class ResponseTy>
   llvm::unique_function<void(const ParamTy &, Callback<ResponseTy>)>
   mkOutMethod(llvm::StringRef Method, OutboundPort *O = nullptr,
-              llvm::unique_function<ResponseTy() const> BaseConstructor =
-              []() { return ResponseTy(); }) {
+              ResponseTy Base = ResponseTy()) {
     if (!O)
       O = Out.get();
-    return [=, BaseConstructor = std::move(BaseConstructor), this](const ParamTy &Params, Callback<ResponseTy> Reply) mutable {
+    return [=, this](const ParamTy &Params, Callback<ResponseTy> Reply) {
       callMethod(
           Method, Params,
-          [=, Reply = std::move(Reply), BaseConstructor = std::move(BaseConstructor)](
+          [=, Reply = std::move(Reply)](
               llvm::Expected<llvm::json::Value> Response) mutable {
             if (!Response)
               return Reply(Response.takeError());
             Reply(
-                parseParam<ResponseTy>(std::move(*Response), Method, "reply", std::move(BaseConstructor())));
+                parseParam<ResponseTy>(std::move(*Response), Method, "reply", Base));
           },
           O);
     };

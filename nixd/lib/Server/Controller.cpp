@@ -199,7 +199,7 @@ void Controller::updateConfig(configuration::TopLevel &&NewConfig) {
 }
 
 void Controller::fetchConfig() {
-  lspserver::log("JSON Config is currently: {0}",
+  lspserver::log("jjw-log: JSON Config is currently: {0}",
                  JSONConfig.options.enable);
   if (ClientCaps.WorkspaceConfiguration) {
     WorkspaceConfiguration(
@@ -293,8 +293,9 @@ Controller::Controller(std::unique_ptr<lspserver::InboundPort> In,
       "textDocument/publishDiagnostics");
 
   readJSONConfig();
+  updateConfig(std::forward<configuration::TopLevel>(JSONConfig));
 
-  lspserver::log("JSON Config read: {0}",
+  lspserver::log("jjw-log: JSON Config read: {0}",
                  JSONConfig.options.enable);
 
   // Workspace
@@ -302,7 +303,7 @@ Controller::Controller(std::unique_ptr<lspserver::InboundPort> In,
                            &Controller::onWorkspaceDidChangeConfiguration);
   WorkspaceConfiguration =
       mkOutMethod<lspserver::ConfigurationParams, configuration::TopLevel>(
-          "workspace/configuration", nullptr, [=, this]() { return JSONConfig; });
+          "workspace/configuration", nullptr, JSONConfig);
 
   /// IPC
   Registry.addNotification("nixd/ipc/diagnostic", this,
